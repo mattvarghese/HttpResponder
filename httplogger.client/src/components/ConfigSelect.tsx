@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from "react";
+﻿import React, { useCallback, useEffect, useState } from "react";
 import type { ConfigModel } from "@/viewmodel/ConfigModel";
 import { AdjustUrl } from "@/model/Utils";
 import { FaSyncAlt } from "react-icons/fa";
@@ -74,7 +74,7 @@ const ConfigSelect: React.FC<Props> = ({
         }
     };
 
-    const loadConfigs = async () =>
+    const loadConfigs = useCallback(async () =>
     {
         try
         {
@@ -110,12 +110,12 @@ const ConfigSelect: React.FC<Props> = ({
                 onSelect(null);
             }
         }
-    };
+    },[onSelect, selectNull, selectedGuid]);
 
     useEffect(() =>
     {
         loadConfigs();
-    }, []);
+    }, [loadConfigs]);
 
     return (
         <div className="space-y-4">
