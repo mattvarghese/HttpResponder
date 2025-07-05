@@ -77,7 +77,16 @@ const LogViewer: React.FC<LogViewerProps> = ({ onViewLogs }) =>
                     </span>
                     <br />
                     and allows you to examine the logs using this UI.<br />
-                    You may also configure how the service responds in the Configuration section.
+                    You may also configure how the service responds in the Configuration section.<br />
+                    Source code at{" "}
+                    <a
+                        href="https://github.com/mattvarghese/HttpResponder/"
+                        className="text-sky-700 underline hover:text-sky-900"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        https://github.com/mattvarghese/HttpResponder/
+                    </a>
                 </p>
 
                 <div className="mb-4">
