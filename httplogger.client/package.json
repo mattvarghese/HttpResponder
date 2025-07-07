@@ -4,7 +4,7 @@
     "version": "0.0.0",
     "type": "module",
     "scripts": {
-        "predev": "npm run lint:fix",
+        "predev": "npm install && npm run lint:fix",
         "dev": "vite",
         "prebuild": "npm install && npm run lint:fix",
         "build": "tsc -b && vite build",

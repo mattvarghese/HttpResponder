@@ -148,7 +148,8 @@ namespace HttpLogger.Server.Controllers
 					ResponseHeaders = responseHeaders,
 					ResponseBody = responseBody,
 					HttpStatusCode = statusCode,
-					ConfigGuid = configGuid
+					ConfigGuid = configGuid,
+					ResponseDelay = responseDelay
 				};
 
 				var today = DateTime.Now.ToString("yyyy-MM-dd");

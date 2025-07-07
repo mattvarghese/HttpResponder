@@ -6,7 +6,24 @@
 
 		public static string DataFolder(string hostName)
 		{
-			string folderPath = "C:\\content\\web-apps\\HttpLogger\\data";
+			string folderPath;
+			/* This is aanother way to do this if you want to do this at compile time
+			 * 
+				#if WINDOWS
+					string folderPath = "C:\\content\\web-apps\\HttpLogger\\data";
+				#else
+					string folderPath = "./data";
+				#endif
+			 */
+			if (OperatingSystem.IsWindows())
+			{
+				folderPath = "C:\\content\\web-apps\\HttpLogger\\data";
+			}
+			else
+			{
+				folderPath = "./data";
+			}
+
 			EnsureDirectoryExists(folderPath);
 			return folderPath;
 		}
