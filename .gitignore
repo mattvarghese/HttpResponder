@@ -1,3 +1,4 @@
 .vs
 HttpLogger.slnLaunch.user
-
+node_modules
+package-lock.json
