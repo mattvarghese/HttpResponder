@@ -7,8 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\httplogger.client\httplogger.client.esproj">
-    </ProjectReference>
+    <ProjectReference Include="..\httplogger.client\httplogger.client.esproj" />
   </ItemGroup>
 
 </Project>
