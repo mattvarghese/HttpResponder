@@ -66,7 +66,7 @@ const Configuration: React.FC = () =>
                 </span>{" "}
                 with the GUID as the value. This will allow the service to use your
                 configuration as the response to your request. Your requests need not be
-                restricted to exactly the api URL - additioanl path-segments and query parameters
+                restricted to exactly the api URL - additional path-segments and query parameters
                 are also handled by the app.
             </p>
 
