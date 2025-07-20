@@ -10,24 +10,6 @@ namespace DaVinciTester.Server
 		{
 			WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-			// Add services to the container.
-			builder.Services.AddControllers();
-
-			// Add cors.
-			builder.Services.AddCors(options =>
-			{
-				options.AddPolicy("DynamicCors", policy =>
-				{
-					policy
-						.SetIsOriginAllowed(origin => !string.IsNullOrWhiteSpace(origin)) // Allow any non-empty origin
-						.AllowAnyHeader()
-						.AllowAnyMethod()
-						.AllowCredentials(); // Only use this if you need it
-				});
-			});
-
-
-			// Options to use for JSON serialization / deserialization
 			JsonSerializerOptions jsonOptions = new JsonSerializerOptions
 			{
 				PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
@@ -36,13 +18,34 @@ namespace DaVinciTester.Server
 			jsonOptions.Converters.Add(new JsonStringEnumConverter());
 			builder.Services.AddSingleton(jsonOptions);
 
+			builder.Services.AddControllers().AddJsonOptions(opts =>
+			{
+				opts.JsonSerializerOptions.PropertyNamingPolicy = jsonOptions.PropertyNamingPolicy;
+				opts.JsonSerializerOptions.WriteIndented = jsonOptions.WriteIndented;
+
+				foreach (JsonConverter converter in jsonOptions.Converters)
+				{
+					opts.JsonSerializerOptions.Converters.Add(converter);
+				}
+			});
+
+			builder.Services.AddCors(options =>
+			{
+				options.AddPolicy("DynamicCors", policy =>
+				{
+					policy
+						.SetIsOriginAllowed(origin => !string.IsNullOrWhiteSpace(origin))
+						.AllowAnyHeader()
+						.AllowAnyMethod()
+						.AllowCredentials();
+				});
+			});
+
 			StatsManager statsManager = new StatsManager(jsonOptions);
 			builder.Services.AddSingleton(statsManager);
 
 			WebApplication app = builder.Build();
 
-			// These are required when running published
-			// so that the static files are served up correctly
 			app.UseDefaultFiles();
 			app.UseStaticFiles();
 
@@ -56,7 +59,6 @@ namespace DaVinciTester.Server
 
 			app.MapControllers();
 
-			// This would be required if we use react-router-dom
 			//app.MapFallbackToFile("/index.html");
 
 			app.Run();
