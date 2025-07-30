@@ -24,6 +24,11 @@ In the configurations dropdown at the top of the left sidebar, choose "Full Stac
 This opens two browser windows. One for the backend which opens ui/stats, and the other for the frontend which opens to the main app.
 C# Breakpoints will hit whenever the code gets called, but TypeScript breakpoints will only hit within that Chrome window for client.
 
+If you get an error because VSCode defaults to `yarn` instead of `npm` for running scripts:
+* Open VSCode settings (CTRL+SHIFT+P and search "Preferences: Open Settings (UI)")
+* search npm package manager - change (from auto) to npm
+* search npm script runner - change (from auto) to npm
+
 ## From terminal / bash
 This relies on the package.json in the root folder.
 
