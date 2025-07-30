@@ -41,6 +41,10 @@ const target = env.ASPNETCORE_HTTPS_PORT ? `https://localhost:${env.ASPNETCORE_H
 // https://vitejs.dev/config/
 export default defineConfig({
     base: "", // or base: './'
+    // Add the below if sourcemaps are not emitted when running from source
+    // build: {
+    //     sourcemap: true
+    // },
     plugins: [plugin(), tailwindcss()],
     resolve: {
         alias: {
