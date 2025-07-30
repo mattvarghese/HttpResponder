@@ -1,0 +1,48 @@
+{
+  "version": "0.2.0",
+  "compounds": [
+    {
+      "name": "Full Stack (Client + Server)",
+      "configurations": ["Backend", "Frontend"]
+    }
+  ],
+  "configurations": [
+    {
+      "name": "Backend",
+      "type": "coreclr",
+      "request": "launch",
+      "preLaunchTask": "build-server", // invoke tasks.json build-server task
+      "program": "${workspaceFolder}/HttpLogger.Server/bin/Debug/net8.0/HttpLogger.Server.dll", // 🔁 Update path if project or .NET version differs
+      "args": [],
+      "cwd": "${workspaceFolder}/HttpLogger.Server", // 🔁 Backend folder
+      "env": {
+        "ASPNETCORE_URLS": "https://localhost:7052", // 🔁 Change backend port if needed
+        "ASPNETCORE_ENVIRONMENT": "Development"
+      },
+      "serverReadyAction": {
+        "action": "openExternally",
+        "pattern": "\\bNow listening on:\\s+(https://\\S+)",
+        "uriFormat": "%s/ui/stats" // 🔁 Modify default launch page (e.g., %s/, %s/health, etc.)
+      }
+    },
+    {
+      "name": "Frontend",
+      "type": "chrome",
+      "request": "launch",
+      "url": "https://localhost:52461", // 🔁 Frontend port
+      "webRoot": "${workspaceFolder}/httplogger.client", // 🔁 Frontend folder
+      "outFiles": ["${workspaceFolder}/httplogger.client/src/**/*.js"], // 🔁 Adjust if your source directory is different
+      "sourceMaps": true,
+      "trace": true,
+      "preLaunchTask": "npm: start-client", // invoke tasks.json npm: start-client task
+
+      // Optional — Uncomment to ensure proper port binding for Chrome debugger
+      // "runtimeArgs": ["--remote-debugging-port=9222"],
+
+      // Optional — Uncomment if your source maps aren't mapping properly
+      // "pathMapping": {
+      //   "/@vite/": "${workspaceFolder}/httplogger.client/" // 🔁 Frontend folder
+      // }
+    }
+  ]
+}
