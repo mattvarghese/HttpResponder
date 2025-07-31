@@ -10,7 +10,8 @@
         "build": "tsc -b && vite build",
         "lint": "eslint .",
         "lint:fix": "eslint . --fix",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "clean": "rm -rf node_modules obj obj\\\\Debug package-lock.json"
     },
     "dependencies": {
         "@monaco-editor/react": "^4.7.0",
