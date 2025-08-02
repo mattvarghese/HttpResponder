@@ -6,6 +6,7 @@ When published (or run from source), users can go to the App UI to create respon
 The app also logs requests and responses, so that users can look these up later from the App UI.
 
 
+
 # Running the code
 
 ## Using VS2022
@@ -13,6 +14,7 @@ This relies on the HttpLogger.sln file and standard VS2022 capabilities.
 
 After checking out the code, right click on the solution in Solution Explorer > Configure Startup Projects > Select "Multiple startup project".
 Then in the box on the right, set Action for both projects to "Start". Move the Server one up before the Client if necessary.
+
 
 ## Using VSCode
 This relies on the root folder's .vscode/tasks.json, .vscode/launch.json.
@@ -29,8 +31,63 @@ If you get an error because VSCode defaults to `yarn` instead of `npm` for runni
 * search npm package manager - change (from auto) to npm
 * search npm script runner - change (from auto) to npm
 
+
 ## From terminal / bash
 This relies on the package.json in the root folder.
 
 You can `cd` to the root folder in a terminal and run `npm run dev` to run the application.
 This does not automatically open browser windows, and you get no debugging capabilities beyond any browser debug tools.
+
+
+## Published using Docker
+
+This allows you to build and run the app entirely in a container, accessible via `https://httplogger.local`.
+
+### Prerequisites
+
+Install system dependencies:
+
+```
+sudo apt install libnss3-tools mkcert docker.io docker-compose docker-buildx
+```
+
+Generate a trusted certificate:
+
+```
+mkcert --install
+mkcert -key-file certs/key.pem -cert-file certs/cert.pem httplogger.local
+```
+
+Add to `/etc/hosts` if not already present:
+
+```
+echo "127.0.0.1 httplogger.local" | sudo tee -a /etc/hosts > /dev/null
+```
+
+### Build and Run
+
+```
+npm run dockerize
+docker-compose up
+```
+
+To run in background:
+
+```
+docker-compose up -d
+```
+
+Access the app at:
+
+```
+https://httplogger.local
+```
+
+To terminate:
+
+- If running in foreground: press `CTRL+C`
+- If running in background:
+
+```
+docker-compose down
+```
