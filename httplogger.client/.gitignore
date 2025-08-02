@@ -4,3 +4,4 @@ obj
 package-lock.json
 src/index.output.css
 obj\\Debug
+obj\\Release
