@@ -96,3 +96,29 @@ To terminate:
 ```
 docker-compose down
 ```
+
+### Distribute
+
+Save the docker image to a tarball:
+```
+docker save -o httpresponder.tar vmatt/httpresponder:1.0
+(or)
+docker save vmatt/httpresponder:1.0 | gzip > httpresponder.tar.gz
+```
+Load and run the image:
+```
+docker load -i httpresponder.tar
+(or)
+gunzip -c httpresponder.tar.gz | docker load
+mkdir data
+docker run -d --name httpresponder -p 443:443 -v $(pwd)/data:/app/data vmatt/httpresponder:1.0
+```
+Stop running image:
+```
+docker stop httpresponder
+docker rm httpresponder
+```
+Delete loaded docker image
+```
+docker rmi vmatt/httpresponder:1.0
+```

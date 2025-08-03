@@ -7,7 +7,7 @@
         "dev": "concurrently -k -n CLIENT,SERVER -c blue,green \"npm run dev --workspace httplogger.client\" \"dotnet run --launch-profile https --project ./HttpLogger.Server\"",
         "build": "npm run build --workspace httplogger.client && npm run copy-to-server",
         "copy-to-server": "copyfiles -u 1 httplogger.client/dist/**/* HttpLogger.Server/wwwroot",
-        "dockerize": "./build-and-package.sh",
+        "dockerize": "./dockerize.sh",
         "clean": "rm -rf package-lock.json node_modules data HttpLogger.Server/data HttpLogger.Server/bin HttpLogger.Server/obj HttpLogger.Server/HttpLogger.Server.csproj.user;  npm run linuxclean --workspace httplogger.client"
     },
     "workspaces": [

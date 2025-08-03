@@ -36,7 +36,18 @@ fi
 echo "🛠️  Publishing backend..."
 dotnet publish HttpLogger.Server/HttpLogger.Server.csproj -c Release -o ./publish
 
-# 6. Build docker image
+# 6 Check and remove existing Docker image (if it exists)
+echo "🧼 Checking for existing Docker image..."
+# Extract image name from docker-compose.yml
+IMAGE_NAME=$(grep 'image:' docker-compose.yml | awk '{print $2}')
+if docker images --format "{{.Repository}}:{{.Tag}}" | grep -q "^$IMAGE_NAME$"; then
+  echo "🗑️  Removing existing image: $IMAGE_NAME"
+  docker rmi "$IMAGE_NAME"
+else
+  echo "✅ No existing image found. Continuing..."
+fi
+
+# 7. Build docker image
 echo "🐳 Building Docker image..."
 DOCKER_BUILDKIT=1 docker-compose build
 
