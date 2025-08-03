@@ -110,6 +110,7 @@ Load and run the image:
 docker load -i httpresponder.tar
 (or)
 gunzip -c httpresponder.tar.gz | docker load
+
 mkdir data
 docker run -d --name httpresponder -p 443:443 -v $(pwd)/data:/app/data vmatt/httpresponder:1.0
 ```
