@@ -8,9 +8,10 @@ namespace HttpLogger.Server.Controllers
 {
 	[Route("ui")]
 	[ApiController]
-	public class UIController(StatsManager statsManager) : ControllerBase
+	public class UIController(IWebHostEnvironment env, StatsManager statsManager) : ControllerBase
 	{
 		private readonly StatsManager _statsManager = statsManager;
+		private readonly IWebHostEnvironment _env = env;
 
 		// GET /?date=yyyy-MM-dd&offset=0&count=1
 		[HttpGet]
@@ -260,6 +261,12 @@ namespace HttpLogger.Server.Controllers
 			{
 				return StatusCode(500, $"Error reading stats file: {ex.Message}");
 			}
+		}
+
+		[HttpGet("settings")]
+		public IActionResult GetAppSettings()
+		{
+			return Ok(_env);
 		}
 	}
 }
