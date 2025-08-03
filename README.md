@@ -51,14 +51,19 @@ Install system dependencies:
 sudo apt install libnss3-tools mkcert docker.io docker-compose docker-buildx
 ```
 
-Generate a trusted certificate:
+Add your user to docker group (requires logout and relogin):
+
+```
+sudo usermod -aG docker $USER
+```
+
+Install CA cert for trusting HTTPS certificate:
 
 ```
 mkcert --install
-mkcert -key-file certs/key.pem -cert-file certs/cert.pem httplogger.local
 ```
 
-Add to `/etc/hosts` if not already present:
+Add container url to `/etc/hosts` if not already present:
 
 ```
 echo "127.0.0.1 httplogger.local" | sudo tee -a /etc/hosts > /dev/null

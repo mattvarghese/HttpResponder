@@ -5,11 +5,19 @@ set -e  # If any command fails (exits with a non-zero status), immediately stop 
 # sudo npm install -g n
 # sudo n latest
 # sudo apt install libnss3-tools mkcert docker.io docker-compose docker-buildx
+# sudo usermod -aG docker $USER
+# Once you do the last line, logout and relogin, or do: newgrp docker
 
 # 1. Setup Certificates
-# echo "🏗️  Set up Certificate..."
-# mkcert --install
-# mkcert -key-file certs/key.pem -cert-file certs/cert.pem httplogger.local
+echo "🏗️  Set up Certificate..."
+# mkcert --install   # Adds a CA cert. To remove, do: mkcert uninstall
+if [ ! -d certs ]; then
+  echo "📁 'certs/' folder not found. Creating and generating cert..."
+  mkdir -p certs
+  mkcert -key-file certs/key.pem -cert-file certs/cert.pem httplogger.local
+else
+  echo "✅ 'certs/' folder already exists. Skipping cert generation."
+fi
 
 # 2. Adjust /etc/hosts file to add line for httplogger.local
 # echo "🔐 Checking hosts entry..."
