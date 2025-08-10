@@ -8,5 +8,5 @@ services:
     volumes:
       - ./data:/app/data           # ✅ maps host ./data to container /app/data
     ports:
-      - "443:443"
+      - "443:443"                  # Left is host port, right is container port
     container_name: httpresponder
