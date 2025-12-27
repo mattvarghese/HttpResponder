@@ -4,7 +4,7 @@ set -e  # If any command fails (exits with a non-zero status), immediately stop 
 # 1. Dependencies
 # sudo npm install -g n
 # sudo n latest
-# sudo apt install libnss3-tools mkcert docker.io docker-compose docker-buildx
+# sudo apt install libnss3-tools mkcert docker.io docker-compose-v2 docker-buildx
 # sudo usermod -aG docker $USER
 # Once you do the last line, logout and relogin, or do: newgrp docker
 
@@ -49,10 +49,10 @@ fi
 
 # 7. Build docker image
 echo "🐳 Building Docker image..."
-DOCKER_BUILDKIT=1 docker-compose build
+DOCKER_BUILDKIT=1 docker compose build
 
 # 7. Inform user we're ready to go
-echo "✅ Ready to run with: docker-compose up"
+echo "✅ Ready to run with: docker compose up"
 echo "✅ Terminate with: CTRL+C"
-echo "✅ Or run in background with: docker-compose up -d"
-echo "✅ Terminate with: docker-compose down"
+echo "✅ Or run in background with: docker compose up -d"
+echo "✅ Terminate with: docker compose down"

@@ -2,7 +2,7 @@
 set -e  # Exit immediately if any command fails
 
 # 1. Dependencies (commented out for reference)
-# sudo apt install libnss3-tools mkcert docker.io docker-compose docker-buildx
+# sudo apt install libnss3-tools mkcert docker.io docker-compose-v2 docker-buildx
 # sudo usermod -aG docker $USER
 # After group change: logout & login, or run `newgrp docker`
 

@@ -4,4 +4,6 @@ node_modules
 package-lock.json
 certs
 publish
+publish-arm64
 data
+httpresponder-arm64.tar

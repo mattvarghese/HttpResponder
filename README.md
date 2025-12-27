@@ -48,7 +48,7 @@ This allows you to build and run the app entirely in a container, accessible via
 Install system dependencies:
 
 ```
-sudo apt install libnss3-tools mkcert docker.io docker-compose docker-buildx
+sudo apt install libnss3-tools mkcert docker.io docker-compose-v2 docker-buildx
 ```
 
 Add your user to docker group (requires logout and relogin):
@@ -73,13 +73,13 @@ echo "127.0.0.1 httplogger.local" | sudo tee -a /etc/hosts > /dev/null
 
 ```
 npm run dockerize
-docker-compose up
+docker compose up
 ```
 
 To run in background:
 
 ```
-docker-compose up -d
+docker compose up -d
 ```
 
 Access the app at:
@@ -94,7 +94,7 @@ To terminate:
 - If running in background:
 
 ```
-docker-compose down
+docker compose down
 ```
 
 ### Distribute
