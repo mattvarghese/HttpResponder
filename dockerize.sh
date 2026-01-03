@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e  # If any command fails (exits with a non-zero status), immediately stop the script.
 
 # 1. Dependencies
