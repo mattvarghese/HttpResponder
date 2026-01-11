@@ -1,9 +1,11 @@
-﻿using System.Text.Json;
+using System.Text.Json;
+using System.Text.RegularExpressions;
 using HttpLogger.Server.Model;
 using HttpLogger.Server.Statistics;
 using HttpLogger.Server.ViewModel;
 using Microsoft.AspNetCore.Http.Extensions;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Primitives;
 
 namespace HttpLogger.Server.Controllers
 {
@@ -26,14 +28,14 @@ namespace HttpLogger.Server.Controllers
 				string? configGuid = null;
 
 				// First, check header
-				if (Request.Headers.TryGetValue(Utils.ConfigKey, out var headerValue))
+				if (Request.Headers.TryGetValue(Utils.ConfigKey, out StringValues headerValue))
 				{
 					configGuid = headerValue.ToString();
 				}
 
 				// If not found in header, check query param
 				if (string.IsNullOrWhiteSpace(configGuid) &&
-					Request.Query.TryGetValue(Utils.ConfigKey, out var queryValue))
+					Request.Query.TryGetValue(Utils.ConfigKey, out StringValues queryValue))
 				{
 					configGuid = queryValue.ToString();
 				}
@@ -42,30 +44,29 @@ namespace HttpLogger.Server.Controllers
 				int statusCode = 200;
 				string responseBody = "";
 				int responseDelay = 0;
-				var responseHeaders = new Dictionary<string, string>
+				Dictionary<string, string> responseHeaders = new()
 				{
 					["Content-Type"] = "application/json"
 				};
 
-				var host = HttpContext?.Request?.Host.Host ?? "";
-				var baseFolder = Utils.DataFolder(host);
+				string host = HttpContext?.Request?.Host.Host ?? "";
+				string baseFolder = Utils.DataFolder(host);
 				string configPath = Path.Combine(baseFolder, "config");
 
-				var request = HttpContext?.Request;
-				var appBaseUrl = request is not null
+				HttpRequest? request = HttpContext?.Request;
+				string appBaseUrl = request is not null
 					? $"{request.Scheme}://{request.Host}{request.PathBase}/"
 					: "https://[hostname]/HttpLogger/"; // fallback
 
-
 				if (!string.IsNullOrWhiteSpace(configGuid))
 				{
-					var configFile = Path.Combine(configPath, $"{configGuid}.json");
+					string configFile = Path.Combine(configPath, $"{configGuid}.json");
 					if (System.IO.File.Exists(configFile))
 					{
 						try
 						{
-							var configText = await System.IO.File.ReadAllTextAsync(configFile);
-							var config = JsonSerializer.Deserialize<ConfigModel>(configText);
+							string configText = await System.IO.File.ReadAllTextAsync(configFile);
+							ConfigModel? config = JsonSerializer.Deserialize<ConfigModel>(configText);
 
 							if (config is null)
 							{
@@ -75,15 +76,105 @@ namespace HttpLogger.Server.Controllers
 							// Touch the file to mark it as recently used
 							System.IO.File.SetLastWriteTime(configFile, DateTime.Now);
 
+							// Defaults from config
 							statusCode = config.StatusCode;
 							responseBody = config.Body ?? "";
 							responseDelay = config.ResponseDelay;
 
 							if (config.ResponseHeaders != null)
 							{
-								foreach (var kvp in config.ResponseHeaders)
+								foreach (KeyValuePair<string, string> kvp in config.ResponseHeaders)
 								{
 									responseHeaders[kvp.Key] = kvp.Value;
+								}
+							}
+
+							// Path-specific override (replace semantics; first match wins)
+							PathResponseModel? matchedResponse = null;
+
+							if (config.PathSpecificResponse != null)
+							{
+
+								// Build path relative to /api/ (no query string)
+								string relativePath = "";
+
+								string? pathValue = Request.Path.Value;
+								if (!string.IsNullOrEmpty(pathValue))
+								{
+									const string apiSegment = "/api";
+
+									int apiPos = pathValue.IndexOf(apiSegment, StringComparison.OrdinalIgnoreCase);
+									if (apiPos >= 0)
+									{
+										// Move past "/api"
+										int start = apiPos + apiSegment.Length;
+
+										// Extract everything after "/api"
+										relativePath = pathValue.Substring(start);
+									}
+								}
+
+								relativePath = relativePath.TrimStart('/'); // no leading '/'
+								foreach (PathSpecificRule rule in config.PathSpecificResponse)
+								{
+									if (rule == null)
+									{
+										continue;
+									}
+
+									if (rule.IsRegularExpression)
+									{
+										if (string.IsNullOrWhiteSpace(rule.Pattern))
+										{
+											continue;
+										}
+
+										RegexOptions options = RegexOptions.CultureInvariant;
+										if (true == rule.IgnoreCase)
+										{
+											options |= RegexOptions.IgnoreCase;
+										}
+
+										// Regex author controls trailing slash behavior; use timeout for safety
+										Regex regex = new(rule.Pattern, options, matchTimeout: TimeSpan.FromMilliseconds(100));
+
+										if (regex.IsMatch(relativePath))
+										{
+											matchedResponse = rule.Response;
+											break;
+										}
+									}
+									else
+									{
+										// Literal match: trim trailing '/' from BOTH pattern and actual path
+										string patternLiteral = (rule.Pattern ?? "").TrimStart('/').TrimEnd('/');
+										string pathLiteral = relativePath.TrimEnd('/');
+
+										if (patternLiteral == pathLiteral)
+										{
+											matchedResponse = rule.Response;
+											break;
+										}
+									}
+								}
+							}
+
+							if (matchedResponse != null)
+							{
+								// Replace (no union/merge)
+								statusCode = matchedResponse.StatusCode;
+								responseBody = matchedResponse.Body ?? "";
+
+								responseHeaders = new Dictionary<string, string>()
+								{
+									["Content-Type"] = "application/json"
+								};
+								if (matchedResponse.ResponseHeaders != null)
+								{
+									foreach (KeyValuePair<string, string> kvp in matchedResponse.ResponseHeaders)
+									{
+										responseHeaders[kvp.Key] = kvp.Value;
+									}
 								}
 							}
 						}
@@ -124,15 +215,15 @@ namespace HttpLogger.Server.Controllers
 				}
 
 				// Read request headers
-				var requestHeaders = new Dictionary<string, string>();
-				foreach (KeyValuePair<string, Microsoft.Extensions.Primitives.StringValues> header in Request.Headers)
+				Dictionary<string, string> requestHeaders = [];
+				foreach (KeyValuePair<string, StringValues> header in Request.Headers)
 				{
 					requestHeaders[header.Key] = header.Value.ToString();
 				}
 
 				// Read request body
 				string requestBody;
-				using (var reader = new StreamReader(Request.Body))
+				using (StreamReader reader = new(Request.Body))
 				{
 					requestBody = await reader.ReadToEndAsync();
 				}
@@ -152,19 +243,19 @@ namespace HttpLogger.Server.Controllers
 					ResponseDelay = responseDelay
 				};
 
-				var today = DateTime.Now.ToString("yyyy-MM-dd");
-				var folderPath = Path.Combine(baseFolder, today);
+				string today = DateTime.Now.ToString("yyyy-MM-dd");
+				string folderPath = Path.Combine(baseFolder, today);
 				Directory.CreateDirectory(folderPath);
-				var logFile = Path.Combine(folderPath, $"{Guid.NewGuid()}.json");
+				string logFile = Path.Combine(folderPath, $"{Guid.NewGuid()}.json");
 
-				var logJson = JsonSerializer.Serialize(logEntry, new JsonSerializerOptions
+				string logJson = JsonSerializer.Serialize(logEntry, new JsonSerializerOptions
 				{
 					WriteIndented = true
 				});
 
 				await System.IO.File.WriteAllTextAsync(logFile, logJson);
 
-				// Apply response delay if configured
+				// Apply response delay if configured (global)
 				if (responseDelay > 0)
 				{
 					await Task.Delay(responseDelay);
@@ -176,7 +267,7 @@ namespace HttpLogger.Server.Controllers
 				{
 					StatusCode = statusCode,
 					Content = responseBody,
-					ContentType = responseHeaders.TryGetValue("Content-Type", out var ct) ? ct : "application/json"
+					ContentType = responseHeaders.TryGetValue("Content-Type", out string? ct) ? ct : "application/json"
 				};
 			}
 			catch (Exception ex)
@@ -184,6 +275,5 @@ namespace HttpLogger.Server.Controllers
 				return StatusCode(500, $"Unhandled error: {ex.Message}\n\n{ex.InnerException}");
 			}
 		}
-
 	}
 }
