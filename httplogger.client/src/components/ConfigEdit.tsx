@@ -1,7 +1,7 @@
-﻿import React, { useState } from "react";
+﻿import React, { useMemo, useState } from "react";
 import { FaTrash, FaPlus, FaSave, FaUndo, FaRegCopy, FaTimes } from "react-icons/fa";
 import MonacoEditor from "@monaco-editor/react";
-import type { ConfigModel } from "@/viewmodel/ConfigModel";
+import type { ConfigModel, PathSpecificRule } from "@/viewmodel/ConfigModel";
 import { AdjustUrl } from "@/model/Utils";
 
 interface Props
@@ -14,6 +14,29 @@ const ConfigEdit: React.FC<Props> = ({ config, onDone }) =>
 {
     const [localConfig, setLocalConfig] = useState(config);
     const [errorMessage, setErrorMessage] = useState("");
+
+    const [pathOverridesOpen, setPathOverridesOpen] = useState(false);
+
+    const [pathOverridesJson, setPathOverridesJson] = useState<string>(() =>
+        JSON.stringify(localConfig.pathSpecificResponse ?? [], null, 2)
+    );
+
+    const pathOverridesCountText = useMemo(() =>
+    {
+        try
+        {
+            const parsed = JSON.parse(pathOverridesJson) as unknown;
+            if (Array.isArray(parsed))
+            {
+                return String(parsed.length);
+            }
+            return "invalid";
+        }
+        catch
+        {
+            return "invalid";
+        }
+    }, [pathOverridesJson]);
 
     const statusCodeOptions = [
         { code: 100, label: "100 Continue" },
@@ -78,15 +101,49 @@ const ConfigEdit: React.FC<Props> = ({ config, onDone }) =>
         });
     };
 
+    const applyPathOverridesJsonToModel = (): boolean =>
+    {
+        try
+        {
+            const parsed = JSON.parse(pathOverridesJson) as unknown;
+
+            if (!Array.isArray(parsed))
+            {
+                setErrorMessage("Path Specific Response Overrides must be a JSON array.");
+                return false;
+            }
+
+            setLocalConfig({ ...localConfig, pathSpecificResponse: parsed as PathSpecificRule[] });
+            return true;
+        }
+        catch (ex)
+        {
+            setErrorMessage("Path Specific Response Overrides JSON is invalid: " + ex);
+            return false;
+        }
+    };
+
     const handleSaveConfig = async () =>
     {
         try
         {
-            const url = AdjustUrl(`/ui/set-config?config-guid=${localConfig.guid}`);
+            setErrorMessage("");
+
+            if (!applyPathOverridesJsonToModel())
+            {
+                return;
+            }
+
+            const updatedConfig: ConfigModel = {
+                ...localConfig,
+                pathSpecificResponse: (JSON.parse(pathOverridesJson) as PathSpecificRule[])
+            };
+
+            const url = AdjustUrl(`/ui/set-config?config-guid=${updatedConfig.guid}`);
             const res = await fetch(url, {
                 method: "PUT",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(localConfig)
+                body: JSON.stringify(updatedConfig)
             });
             if (res.ok)
             {
@@ -97,8 +154,8 @@ const ConfigEdit: React.FC<Props> = ({ config, onDone }) =>
             {
                 throw new Error(`HTTP ${res.status}`);
             }
-
-        } catch (ex)
+        }
+        catch (ex)
         {
             setErrorMessage("Failed saving config: " + ex);
         }
@@ -238,6 +295,50 @@ const ConfigEdit: React.FC<Props> = ({ config, onDone }) =>
                 </div>
             </div>
 
+            {/* Path Specific Response Overrides (collapsible) */}
+            <div className="rounded border border-gray-300">
+                <button
+                    type="button"
+                    className="flex w-full items-center justify-between px-4 py-2 text-left font-medium"
+                    onClick={() => setPathOverridesOpen(!pathOverridesOpen)}
+                >
+                    <span>
+                        {pathOverridesOpen
+                            ? "Path Specific Response Overrides"
+                            : `Path Specific Response Overrides (${pathOverridesCountText})`}
+                    </span>
+                    <span className="text-gray-500">{pathOverridesOpen ? "Hide" : "Show"}</span>
+                </button>
+
+                {pathOverridesOpen && (
+                    <div className="space-y-3 px-4 pb-4">
+                        <div className="text-sm text-gray-700">
+                            Path specific overrides are advanced functionality. They allow overrides by literal paths or
+                            regular expressions. See source-code at{" "}
+                            <a
+                                href="https://github.com/mattvarghese/HttpResponder/blob/main/HttpLogger.Server/Controllers/HttpController.cs"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-sky-700 underline"
+                            >
+                                https://github.com/mattvarghese/HttpResponder/blob/main/HttpLogger.Server/Controllers/HttpController.cs
+                            </a>{" "}
+                            for how to use.
+                        </div>
+
+                        <div className="h-60 overflow-hidden rounded border border-gray-300">
+                            <MonacoEditor
+                                language="json"
+                                value={pathOverridesJson}
+                                onChange={(value) => setPathOverridesJson(value || "[]")}
+                                height="100%"
+                                options={{ minimap: { enabled: false } }}
+                            />
+                        </div>
+                    </div>
+                )}
+            </div>
+
             <div className="flex flex-wrap items-center justify-between gap-4">
                 <div className="flex gap-4">
                     <button
@@ -248,7 +349,12 @@ const ConfigEdit: React.FC<Props> = ({ config, onDone }) =>
                     </button>
 
                     <button
-                        onClick={() => setLocalConfig({ ...config })}
+                        onClick={() =>
+                        {
+                            setLocalConfig({ ...config });
+                            setPathOverridesJson(JSON.stringify(config.pathSpecificResponse ?? [], null, 2));
+                            setErrorMessage("");
+                        }}
                         className="flex items-center gap-2 bg-gray-500 text-white px-4 py-2 rounded hover:bg-gray-600"
                     >
                         <FaUndo /> Reset

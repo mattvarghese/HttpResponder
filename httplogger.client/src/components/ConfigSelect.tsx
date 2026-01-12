@@ -50,7 +50,8 @@ const ConfigSelect: React.FC<Props> = ({
                 responseHeaders: {},
                 body: "",
                 guid: crypto.randomUUID(),
-                responseDelay: 500
+                responseDelay: 500,
+                pathSpecificResponse: []
             });
         } else
         {
