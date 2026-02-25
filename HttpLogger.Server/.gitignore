@@ -2,3 +2,4 @@ bin
 obj
 HttpLogger.Server.csproj.user
 data
+wwwroot

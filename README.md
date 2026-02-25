@@ -48,7 +48,7 @@ This allows you to build and run the app entirely in a container, accessible via
 Install system dependencies:
 
 ```
-sudo apt install libnss3-tools mkcert docker.io docker-compose-v2 docker-buildx
+sudo apt install dotnet-sdk-8.0 libnss3-tools mkcert docker.io docker-compose-v2 docker-buildx
 ```
 
 Add your user to docker group (requires logout and relogin):
